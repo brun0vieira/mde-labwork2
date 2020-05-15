@@ -27,11 +27,30 @@ opcao_valida(Opcao, A, B):-
     Opcao >=A,
     Opcao =<B.
 
-% menu_principal(1):- menu_gestao.
+menu_principal(1):- menu_gestao.
 % menu_principal(2):- menu_consulta.
 % menu_principal(3):- base_dados.
 menu_principal(4):- info.
-% menu_principal(5):- sair do programa
+menu_principal(5):- terminar_programa.
+
+menu_gestao:-
+    limpar_ecra,
+    write('Gestão da base de conhecimento'),nl,nl,
+    write('  1. Adicionar membros da rede.'),nl,
+    write('  2. Adicionar meios de transporte.'),nl,
+    write('  3. Adicionar equipamentos de protecção existentes nos membros.'),nl,
+    write('  4. Adicionar ligações entre membros.'),nl,
+    write('  5. Adicionar ...'),nl,nl,
+    write('  6. Alterar membros da rede.'),nl,
+    write('  7. Alterar equipamentos de protecção existentes nos membros.'),nl,
+    write('  8. Alterar ligações entre membros.'),nl,
+    write('  9. Alterar ...'),nl,nl,
+    write('10. Remover membros da rede.'),nl,
+    write('11. Remover de protecção existentes nos membros.'),
+    write('12. Remover ligações entre membros'),nl,
+    write('13. Remover ...'),nl,
+    write('14. Voltar ao menu anterior.'),nl,
+    ler_opcao(_Opcao, 1, 14).
 
 info:-
     limpar_ecra,
@@ -41,11 +60,9 @@ info:-
     write('Pressione \'1\' para voltar ao menu principal.'), nl,
     ler_opcao(_Opcao, 1, 1).
 
+terminar_programa:- halt.
+
 limpar_ecra:- write('\e[2J').
-
-
-
-
 
 
 
