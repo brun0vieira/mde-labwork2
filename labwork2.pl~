@@ -47,9 +47,9 @@ menu_gestao:-
     write('  8. Alterar ligações entre membros.'),nl,
     write('  9. Alterar ...'),nl,nl,
     write('10. Remover membros da rede.'),nl,
-    write('11. Remover de protecção existentes nos membros.'),
+    write('11. Remover de protecção existentes nos membros.'),nl,
     write('12. Remover ligações entre membros'),nl,
-    write('13. Remover ...'),nl,
+    write('13. Remover ...'),nl,nl,
     write('14. Voltar ao menu anterior.'),nl,
     ler_opcao(Opcao, 1, 14),
     gestao(Opcao),
@@ -61,11 +61,11 @@ menu_consulta:-
     write('  1. Listar membros da rede.'),nl,
     write('  2. Listar equipamentos de protecção existentes.'),nl,
     write('  3. Listar cidades por equipamento existente.'),nl,
-    write('  4. Listar itinerários entre membros.'),nl,
+    write('  4. Listar itinerários entre membros.'),nl,nl,
     write('  5. Obter itinerário entre membros com menor distancia'),nl,
     write('  6. Obter itinerário entre membros com maior distância.'),nl,
     write('  8. Obter itinerário entre membros com passagem por outros membros.'),nl,
-    write('  9. Obter ...'),nl,
+    write('  9. Obter ...'),nl,nl,
     write('10. Voltar ao menu anterior.'),nl,
     ler_opcao(Opcao, 1, 10),
     consulta(Opcao),
@@ -164,7 +164,6 @@ bd(2):-
 
 bd(3):-
     run.
-
 
 
 
