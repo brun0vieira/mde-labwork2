@@ -1,6 +1,6 @@
 :-dynamic membro/2. % membro - nome, localizacao
 :-dynamic meio_transporte/2. % meio de transporte - descricao, velocidade (km/h)
-
+:-dynamic equipamento/2. % equipamento - descricao, membro pertencente
 run:-
     limpar_ecra,
     write('MENU'),nl,nl,
@@ -153,9 +153,12 @@ adicionar_transporte:-
     opcao_aux('Velocidade (km/h): ', '[velocidade média do meio de transporte]', Velocidade),
     verifica_meio_transporte(Descricao, Velocidade).
 
-
 adicionar_equipamento:-
-    write('Adicionar equipamento').
+    write('** Adicionar equipamentos de protecção existentes nos membros. **'),nl,
+    opcao_aux('Descricao: ', [mascara, viseira, luvas, alcool, etc], Descricao),
+    opcao_aux('Membro: ', '[membro a que pertence]', Membro_pertencente),
+    verifica_equipamento(Descricao, Membro_pertencente).
+
 adicionar_ligacao:-
     write('Adicionar ligacao').
 alterar_membro:-
@@ -177,7 +180,7 @@ remover_ligacao:-
 consulta(1):-
     listar_membros.
 consulta(2):-
-    listar_meio_transporte. % teste -> eliminar depois
+    listar_equipamento.
 consulta(3):-
     write('por implementar').
 consulta(4):-
@@ -200,12 +203,12 @@ consulta(10):-
     run.
 
 listar_membros:-
-    findall(Nome, membro(Nome, _), Lista_membros),
+    findall([Nome,Localizacao], membro(Nome, Localizacao), Lista_membros),
     format('Membros da rede:\n~w\n\n', [Lista_membros]).
 
-listar_meio_transporte:-
-    findall(Descricao, meio_transporte(Descricao, _), Lista_mt),
-    format('Meios de transporte da rede:\n~w\n\n',[Lista_mt]).
+listar_equipamento:-
+    findall([Descricao,Membro_pertencente], equipamento(Descricao, Membro_pertencente), Lista_equipamento),
+    format('Equipamentos:\n~w\n\n', [Lista_equipamento]).
 
 bd(1):-
     write('por implementar').
@@ -224,16 +227,37 @@ opcao_aux(Imprime, Opcoes, Opcao):-
     ler_buffer(Opcao).
 
 verifica_membro(Nome, Localizacao):-
-    membro(Nome, Localizacao),
-    format('~w já existe em ~w.\n\n', [Nome, Localizacao]),!;
+    membro(Nome, _),
+    format('~w já existe na rede.\n\n', [Nome]),!;
     assert(membro(Nome, Localizacao)),
-    format('~w adicionado em ~w.\n\n', [Nome, Localizacao]).
+    format('~w adicionado(a) em ~w.\n\n', [Nome, Localizacao]).
 
 verifica_meio_transporte(Descricao, Velocidade):-
     meio_transporte(Descricao, _),
     format('~w já está presente na rede de distribuição.\n\n', [Descricao]),!;
     assert(meio_transporte(Descricao, Velocidade)),
-    format('~w adicionado à rede de distribuição.\n\n', [Descricao]).
+    format('~w adicionado(a) à rede de distribuição.\n\n', [Descricao]).
+
+verifica_equipamento(Descricao, Membro_pertencente):-
+    equipamento(Descricao, Membro_pertencente),
+    format('O membro ~w já tem ~w.\n\n', [Membro_pertencente, Descricao]),!;
+    assert(equipamento(Descricao, Membro_pertencente)),
+    format('~w adicionado(a) ao membro ~w.\n\n', [Descricao, Membro_pertencente]).
+
+% Se for preciso usar stock voltar aqui e fazer respetivas mudanças
+/*
+% Se o equipamento já existe, incrementa-se o stock.
+% Caso contrário, adiciona-se o equipamento com o respetivo stock.
+
+verifica_equipamento(Descricao, Membro_pertencente, Stock):-
+    equipamento(Descricao, Membro_pertencente,_),
+    format('O membro ~w já tem ~w ~w.', [Membro_pertencente,, Descricao]),
+    retract(equipamento(Descricao, Membro_pertencente, _)),
+    assert(equipamento(Descricao, Membro_pertencente, Stock)),
+    format('Acabou de ser adicionado ~w ~w ao membro ~w.',[Stock, Descricao, Membro_pertencente]),!;
+    assert(equipamento(Descricao, Membro_pertencente, Stock)),
+    format('Foi adicionado ~w ~w ao membro ~w', [Stock, Descricao, Membro_pertencente]).
+*/
 
 voltar_menu_anterior:-
     write('Pressione \'1\' para voltar ao menu anterior.'), nl,
