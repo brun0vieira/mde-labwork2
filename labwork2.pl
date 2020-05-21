@@ -1,3 +1,6 @@
+:-dynamic membro/2. % membro - nome, localizacao
+:-dynamic meio_transporte/2. % meio de transporte - descricao, velocidade (km/h)
+
 run:-
     limpar_ecra,
     write('MENU'),nl,nl,
@@ -52,7 +55,9 @@ menu_gestao:-
     write('13. Remover ...'),nl,nl,
     write('14. Voltar ao menu anterior.'),nl,
     ler_opcao(Opcao, 1, 14),
+    limpar_ecra,
     gestao(Opcao),
+    voltar_menu_anterior,
     menu_gestao.
 
 menu_consulta:-
@@ -68,7 +73,9 @@ menu_consulta:-
     write('  9. Obter ...'),nl,nl,
     write('10. Voltar ao menu anterior.'),nl,
     ler_opcao(Opcao, 1, 10),
+    limpar_ecra,
     consulta(Opcao),
+    voltar_menu_anterior,
     menu_consulta.
 
 base_dados:-
@@ -86,8 +93,7 @@ info:-
     write('Projecto nº2 de MDE realizado por:'), nl,
     write('   Bruno Vieira - 50046.'), nl,
     write('   Serafim Ciobanu - 50006.'), nl, nl,
-    write('Pressione \'1\' para voltar ao menu principal.'), nl,
-    ler_opcao(_Opcao, 1, 1).
+    voltar_menu_anterior.
 
 terminar_programa:- halt.
 
@@ -100,30 +106,34 @@ process1(10,[]):-nl.
 process1(13,[]):-nl.
 process1(C,[C|R]) :- readlist1(R).
 
+%-----------------------------------------------------------
+% Gestão da base de conhecimento
+%-----------------------------------------------------------
+
 gestao(1):-
-    write('por implementar1').
+    adicionar_membro.
 gestao(2):-
-    write('por implementar2').
+    adicionar_transporte.
 gestao(3):-
-    write('por implementar3').
+    adicionar_equipamento.
 gestao(4):-
-    write('por implementar4').
+    adicionar_ligacao.
 gestao(5):-
     write('por implementar5').
 gestao(6):-
-    write('por implementar6').
+    alterar_membro.
 gestao(7):-
-    write('por implementar7').
+    alterar_equipamento.
 gestao(8):-
-    write('por implementar8').
+    alterar_ligacao.
 gestao(9):-
     write('por implementar9').
 gestao(10):-
-    write('por implementar10').
+    remover_membro.
 gestao(11):-
-    write('por implementar11').
+    remover_equipamento.
 gestao(12):-
-    write('por implementar12').
+    remover_ligacao.
 gestao(13):-
     write('por implementar13').
 
@@ -131,8 +141,40 @@ gestao(13):-
 gestao(14):-
     run.
 
+adicionar_membro:-
+    write('** Adicionar membro à rede. **'),nl,nl,
+    opcao_aux('Nome: ', [clinica, hospital, supermercado, etc], Nome),
+    opcao_aux('Localizacao: ', '[Inserir localidade ou cidade]', Localizacao),
+    verifica_membro(Nome, Localizacao).
+
+adicionar_transporte:-
+    write('** Adicionar meio de transporte à rede. ***'), nl,nl,
+    opcao_aux('Descricao: ', [carro, carrinha, aviao, etc], Descricao),
+    opcao_aux('Velocidade (km/h): ', '[velocidade média do meio de transporte]', Velocidade),
+    verifica_meio_transporte(Descricao, Velocidade).
+
+adicionar_equipamento:-
+    write('Adicionar equipamento').
+adicionar_ligacao:-
+    write('Adicionar ligacao').
+alterar_membro:-
+    write('Alterar membro').
+alterar_equipamento:-
+    write('Alterar equipamento').
+alterar_ligacao:-
+    write('Alterar ligacao').
+remover_membro:-
+    write('Remover membro').
+remover_equipamento:-
+    write('Remover equipamento').
+remover_ligacao:-
+    write('Remover ligacao').
+%-----------------------------------------------------------
+% Consulta à base de conhecimentos
+%-----------------------------------------------------------
+
 consulta(1):-
-    write('por implementar').
+    listar_membros.
 consulta(2):-
     write('por implementar').
 consulta(3):-
@@ -156,6 +198,10 @@ consulta(10):-
 consulta(10):-
     run.
 
+listar_membros:-
+    findall(Nome, membro(Nome, _), Lista_membros),
+    format('Membros da rede:\n~w\n\n', [Lista_membros]).
+
 bd(1):-
     write('por implementar').
 
@@ -164,6 +210,37 @@ bd(2):-
 
 bd(3):-
     run.
+
+% Funcoes auxiliares
+
+opcao_aux(Imprime, Opcoes, Opcao):-
+    write(Opcoes),nl,
+    write(Imprime),
+    ler_buffer(Opcao).
+
+verifica_membro(Nome, Localizacao):-
+    membro(Nome, Localizacao),
+    format('~w já existe em ~w.\n\n', [Nome, Localizacao]),!;
+    assert(membro(Nome, Localizacao)),
+    format('~w adicionado em ~w.\n\n', [Nome, Localizacao]).
+
+verifica_meio_transporte(Descricao, Velocidade):-
+    meio_transporte(Descricao, _),
+    format('~w já está presente na rede de distribuição.\n\n', [Descricao]),!;
+    assert(meio_transporte(Descricao, Velocidade)),
+    format('~w adicionado à rede de distribuição.\n\n', [Descricao]).
+
+voltar_menu_anterior:-
+    write('Pressione \'1\' para voltar ao menu anterior.'), nl,
+    ler_opcao(_Opcao, 1, 1).
+
+
+
+
+
+
+
+
 
 
 
