@@ -1,6 +1,8 @@
 :-dynamic membro/2. % membro - nome, localizacao
-:-dynamic meio_transporte/2. % meio de transporte - descricao, velocidade (km/h)
+:-dynamic meio_transporte/4. % meio de transporte - descricao, velocidade (km/h), hora_inicial, hora_final
 :-dynamic equipamento/2. % equipamento - descricao, membro pertencente
+:-dynamic ligacao/4. % ligacao - origem, destino, distancia, meio de transporte
+
 run:-
     limpar_ecra,
     write('MENU'),nl,nl,
@@ -43,8 +45,8 @@ menu_gestao:-
     write('  1. Adicionar membros da rede.'),nl,
     write('  2. Adicionar meios de transporte.'),nl,
     write('  3. Adicionar equipamentos de protecção existentes nos membros.'),nl,
-    write('  4. Adicionar ligações entre membros.'),nl,
-    write('  5. Adicionar ...'),nl,nl,
+    write('  4. Adicionar ligações entre membros.'),nl,nl,
+    write('  5. Alterar meios de transporte.'),nl,
     write('  6. Alterar membros da rede.'),nl,
     write('  7. Alterar equipamentos de protecção existentes nos membros.'),nl,
     write('  8. Alterar ligações entre membros.'),nl,
@@ -119,7 +121,7 @@ gestao(3):-
 gestao(4):-
     adicionar_ligacao.
 gestao(5):-
-    write('por implementar5').
+    alterar_meio_transporte.
 gestao(6):-
     alterar_membro.
 gestao(7):-
@@ -151,22 +153,59 @@ adicionar_transporte:-
     write('** Adicionar meio de transporte à rede. ***'), nl,nl,
     opcao_aux('Descricao: ', [carro, carrinha, aviao, etc], Descricao),
     opcao_aux('Velocidade (km/h): ', '[velocidade média do meio de transporte]', Velocidade),
-    verifica_meio_transporte(Descricao, Velocidade).
+    opcao_aux('Hora (hh:mm): ', '[Hora inicial de funcionamento]', Hora_inicial),
+    opcao_aux('Hora final (hh:mm): ', '[Hora final de funcionamento]', Hora_final),
+    verifica_meio_transporte(Descricao, Velocidade, Hora_inicial, Hora_final).
 
 adicionar_equipamento:-
-    write('** Adicionar equipamentos de protecção existentes nos membros. **'),nl,
+    write('** Adicionar equipamentos de protecção existentes nos membros. **\n'),
     opcao_aux('Descricao: ', [mascara, viseira, luvas, alcool, etc], Descricao),
     opcao_aux('Membro: ', '[membro a que pertence]', Membro_pertencente),
     verifica_equipamento(Descricao, Membro_pertencente).
 
 adicionar_ligacao:-
-    write('Adicionar ligacao').
+    write('** Adicionar ligação entre membros. **\n\n'),
+    opcao_aux('Origem: ', '[Origem da ligação]', Origem),
+    opcao_aux('Destino: ', '[Destino da ligação]', Destino),
+    opcao_aux('Distância: ', '[Distância entre origem e destino] (km)', Distancia),
+    opcao_aux('Transporte: ', '[Meio de transporte para a viagem]', Transporte),
+    verifica_ligacao(Origem, Destino, Distancia, Transporte).
+
+alterar_meio_transporte:-
+    write('** Alterar meios de transporte **\n\n'),
+    opcao_aux('Transporte: ', '[Meio de transporte a alterar]', Transporte),
+    opcao_aux('Nome: ', '[Novo nome para o transporte a alterar]', Novo_nome),
+    opcao_aux('Velocidade: ', '[Nova velocidade]', Nova_velocidade),
+    opcao_aux('Hora inicial: ', '[Nova hora inicial de funcionamento]', Nova_hora_inicial),
+    opcao_aux('Hora final: ', '[Nova hora final de funcionamento]', Nova_hora_final),
+    verifica_alterar_transporte(Transporte, Novo_nome, Nova_velocidade, Nova_hora_inicial, Nova_hora_final).
+
 alterar_membro:-
-    write('Alterar membro').
+    write('** Alterar membro **\n\n'),
+    opcao_aux('Membro: ', '[Membro a alterar]', Nome),
+    opcao_aux('Nome: ', '[Novo nome para o membro]', Novo_nome),
+    opcao_aux('Localização: ', '[Nova localização para o membro]', Nova_localizacao),
+    verifica_alterar_membro(Nome, Novo_nome, Nova_localizacao).
+
 alterar_equipamento:-
-    write('Alterar equipamento').
+    write('** Alterar equipamento de protecção existentes **\n\n'),
+    opcao_aux('Descricao: ', '[Nome do equipamento a alterar]', Descricao),
+    opcao_aux('Membro: ', '[Membro a que pertence o equipamento]', Membro_pertencente),
+    opcao_aux('Nome: ', '[Novo nome do equipamento]', Novo_nome),
+    opcao_aux('Membro: ', '[Novo membro do equipamento]', Novo_membro),
+    verifica_alterar_equipamento(Descricao, Membro_pertencente, Novo_nome, Novo_membro).
+
 alterar_ligacao:-
-    write('Alterar ligacao').
+    write('** Alterar ligações entre membros **\n\n'),
+    opcao_aux('Origem: ', '[Origem da ligação a alterar]', Origem),
+    opcao_aux('Destino: ', '[Destino da ligação a alterar]', Destino),
+    opcao_aux('Origem: ', '[Nova origem da ligação]', Nova_origem),
+    opcao_aux('Destino: ', '[Novo destino da ligação]',Novo_destino),
+    opcao_aux('Distância: ', '[Nova distação da ligação]', Nova_distancia),
+    opcao_aux('Meio de transporte: ', '[Novo meio de transporte da ligação]', Transporte),
+    verifica_alterar_ligacao(Origem, Destino, Nova_origem, Novo_destino, Nova_distancia, Transporte).
+
+
 remover_membro:-
     write('Remover membro').
 remover_equipamento:-
@@ -182,7 +221,7 @@ consulta(1):-
 consulta(2):-
     listar_equipamento.
 consulta(3):-
-    write('por implementar').
+    listar_ligacoes.
 consulta(4):-
     write('por implementar').
 consulta(5):-
@@ -210,6 +249,14 @@ listar_equipamento:-
     findall([Descricao,Membro_pertencente], equipamento(Descricao, Membro_pertencente), Lista_equipamento),
     format('Equipamentos:\n~w\n\n', [Lista_equipamento]).
 
+listar_ligacoes:-
+    findall([Origem, Destino, Distancia, Transporte], ligacao(Origem, Destino, Distancia, Transporte), Lista),
+    format('Ligações:\n~w\n\n', [Lista]).
+
+listar_transporte:-
+    findall([Descricao, Velocidade, Hora_inicial, Hora_final], meio_transporte(Descricao, Velocidade, Hora_inicial, Hora_final), Lista),
+    format('Meios de transporte:\n~w\n\n', [Lista]).
+
 bd(1):-
     write('por implementar').
 
@@ -232,10 +279,11 @@ verifica_membro(Nome, Localizacao):-
     assert(membro(Nome, Localizacao)),
     format('~w adicionado(a) em ~w.\n\n', [Nome, Localizacao]).
 
-verifica_meio_transporte(Descricao, Velocidade):-
-    meio_transporte(Descricao, _),
+verifica_meio_transporte(Descricao, Velocidade,Hora_inicial,Hora_final):-
+    meio_transporte(Descricao,_,_,_),
     format('~w já está presente na rede de distribuição.\n\n', [Descricao]),!;
-    assert(meio_transporte(Descricao, Velocidade)),
+    % Se tiver tempo proteger o código para o caso em que Hora_final < Hora_inicial
+    assert(meio_transporte(Descricao, Velocidade,Hora_inicial,Hora_final)),
     format('~w adicionado(a) à rede de distribuição.\n\n', [Descricao]).
 
 verifica_equipamento(Descricao, Membro_pertencente):-
@@ -246,20 +294,50 @@ verifica_equipamento(Descricao, Membro_pertencente):-
     format('~w adicionado(a) ao membro ~w.\n\n', [Descricao, Membro_pertencente]),!;
     format('O membro ~w não existe na rede.\n\n', [Membro_pertencente]).
 
-% Se for preciso usar stock voltar aqui e fazer respetivas mudanças
-/*
-% Se o equipamento já existe, incrementa-se o stock.
-% Caso contrário, adiciona-se o equipamento com o respetivo stock.
+verifica_ligacao(Origem, Destino, Distancia, Transporte):-
+    ligacao(Origem, Destino,_,_),
+    format('A ligação [~w]-[~w] já existe.\n\n', [Origem, Destino]),!;
+    membro(Origem, _),
+    membro(Destino, _),
+    assert(ligacao(Origem, Destino, Distancia, Transporte)),
+    format('A ligação [~w]-[~w] foi criada com sucesso.\n\n',[Origem,Destino]),!;
+    write('Para fazer ligações ambos os membros têm que existir na rede de distribuição.'),nl.
 
-verifica_equipamento(Descricao, Membro_pertencente, Stock):-
-    equipamento(Descricao, Membro_pertencente,_),
-    format('O membro ~w já tem ~w ~w.', [Membro_pertencente,, Descricao]),
-    retract(equipamento(Descricao, Membro_pertencente, _)),
-    assert(equipamento(Descricao, Membro_pertencente, Stock)),
-    format('Acabou de ser adicionado ~w ~w ao membro ~w.',[Stock, Descricao, Membro_pertencente]),!;
-    assert(equipamento(Descricao, Membro_pertencente, Stock)),
-    format('Foi adicionado ~w ~w ao membro ~w', [Stock, Descricao, Membro_pertencente]).
-*/
+verifica_alterar_membro(Nome, Novo_nome, Nova_localizacao):-
+    membro(Novo_nome,_),
+    format('[~w] já existe na rede de distribuição.\n\n', [Novo_nome]),!;
+    membro(Nome,_),
+    retract(membro(Nome,_)),
+    assert(membro(Novo_nome, Nova_localizacao)),
+    format('[~w] alterado com sucesso para [~w] com a localização [~w].\n\n', [Nome, Novo_nome, Nova_localizacao]),!;
+    format('[~w] não existe na rede de distribuição.\n\n', [Nome]).
+
+verifica_alterar_transporte(Transporte, Novo_nome, Nova_velocidade, Nova_hora_inicial, Nova_hora_final):-
+    meio_transporte(Novo_nome,_,_,_),
+    format('[~w] já existe nos meios de transporte.\n\n',[Novo_nome]),!;
+    meio_transporte(Transporte,_,_,_),
+    retract(meio_transporte(Transporte,_,_,_)),
+    assert(meio_transporte(Novo_nome, Nova_velocidade, Nova_hora_inicial, Nova_hora_final)),
+    format('[~w] alterado com sucesso para [~w] com uma velocidade de [~w] km/h e um horário de funcionamento entre as [~w] e as [~w].\n\n', [Transporte, Novo_nome, Nova_velocidade, Nova_hora_inicial, Nova_hora_final]),!;
+    format('[~w] não existe nos meios de transporte.\n\n',[Transporte]).
+
+verifica_alterar_equipamento(Descricao, Membro_pertencente, Novo_nome, Novo_membro):-
+    equipamento(Novo_nome,Novo_membro),
+    format('O membro [~w] já possui [~w].\n\n', [Novo_nome,Novo_membro]),!;
+    equipamento(Descricao,Membro_pertencente),
+    retract(equipamento(Descricao,Membro_pertencente)),
+    assert(equipamento(Novo_nome, Novo_membro)),
+    format('[~w] alterado com sucesso para [~w] do membro [~w] para o membro [~w].\n\n', [Descricao, Novo_nome, Membro_pertencente, Novo_membro]),!;
+    format('O membro [~w] não possui o equipamento [~w], portanto não é possível alterar.\n\n', [Membro_pertencente,Descricao]).
+
+verifica_alterar_ligacao(Origem, Destino, Nova_origem, Novo_destino, Nova_distancia, Transporte):-
+    ligacao(Nova_origem, Novo_destino,_,_),
+    format('A ligação [~w]-[~w] já existe.\n\n'),!;
+    ligacao(Origem, Destino,_,_),
+    retract(ligacao(Origem, Destino,_,_)),
+    assert(ligacao(Nova_origem, Novo_destino, Nova_distancia, Transporte)),
+    format('A ligação [~w]-[~w] foi alterada com sucesso para [~w]-[~w]', [Origem,Destino,Nova_origem,Novo_destino]),!;
+    format('A ligação [~w]-[~w] não existe.\n\n').
 
 voltar_menu_anterior:-
     write('Pressione \'1\' para voltar ao menu anterior.'), nl,
