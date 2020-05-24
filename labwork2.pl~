@@ -273,8 +273,13 @@ listar_transporte:-
 listar_cidades:-
     write('** Listar cidades por tipo de membro **\n\n'),
     opcao_aux('Tipo: ', '[Tipo de membro]', Tipo),
-    findall([Nome,Localizacao], membro(Tipo,Nome,Localizacao), Lista),
-    format('Cidades onde existem membros do tipo [~w]:\n~w\n\n', [Tipo, Lista]).
+    findall([Localizacao], membro(Tipo,_,Localizacao), Lista),
+    % falta remover os valores duplicados na Lista
+    uniq(Lista, Lista_atualizada),
+    format('Cidades onde existem membros do tipo [~w]:\n~w\n\n', [Tipo, Lista_atualizada]).
+
+
+uniq(Data,Uniques):- sort(Data, Uniques).
 
 bd(1):-
     write('por implementar').

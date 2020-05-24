@@ -275,7 +275,11 @@ listar_cidades:-
     opcao_aux('Tipo: ', '[Tipo de membro]', Tipo),
     findall([Localizacao], membro(Tipo,_,Localizacao), Lista),
     % falta remover os valores duplicados na Lista
-    format('Cidades onde existem membros do tipo [~w]:\n~w\n\n', [Tipo, Lista]).
+    uniq(Lista, Lista_atualizada),
+    format('Cidades onde existem membros do tipo [~w]:\n~w\n\n', [Tipo, Lista_atualizada]).
+
+% sort -> ordena e remove os valores duplicados.
+uniq(Data,Uniques):- sort(Data, Uniques).
 
 bd(1):-
     write('por implementar').
