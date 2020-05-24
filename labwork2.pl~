@@ -1,7 +1,7 @@
 :-dynamic membro/3. % membro - tipo, nome, localizacao
 :-dynamic meio_transporte/4. % meio de transporte - descricao, velocidade (km/h), hora_inicial, hora_final
 :-dynamic equipamento/2. % equipamento - descricao, membro pertencente
-:-dynamic ligacao/4. % ligacao - origem, destino, distancia, meio de transporte
+:-dynamic ligacao/6. % ligacao - origem, destino, distancia, meio de transporte, hora_inicial, hora_final
 
 run:-
     limpar_ecra,
@@ -293,12 +293,12 @@ listar_transportes_horarios:-
 
 listar_transportes_membros(Membro_1, Membro_2):-
     % Lista_1 -> transportes membro_1-membro_2
-    findall([Transporte], ligacao(Membro_1,Membro_2,_,Transporte), Lista_1),
+    findall([Transporte,Hora_inicial,Hora_final], ligacao(Membro_1,Membro_2,_,Transporte,Hora_inicial, Hora_final), Lista_1),
     % Lista_2 -> transportes membro_2-membro_1
-    findall([Transporte], ligacao(Membro_2,Membro_1,_,Transporte), Lista_2),
+    findall([Transporte,Hora_inicial,Hora_final], ligacao(Membro_2,Membro_1,_,Transporte,Hora_inicial,Hora_final), Lista_2),
     % Lista_3 -> Lista_1+Lista_2
     append(Lista_1,Lista_2,Lista_3),
-    format('Os transportes disponíveis para viagens entre [~w] e [~w] são:\n~w.\n\n', [Membro_1,Membro_2,Lista_3]).
+    format('Os transportes disponíveis para viagens entre [~w] e [~w] com os respetivos horários são:\n~w.\n\n', [Membro_1,Membro_2,Lista_3]).
 
 bd(1):-
     write('por implementar').
@@ -338,12 +338,12 @@ verifica_equipamento(Descricao, Membro_pertencente):-
     format('O membro ~w não existe na rede.\n\n', [Membro_pertencente]).
 
 verifica_ligacao(Origem, Destino, Distancia, Transporte):-
-    ligacao(Origem,Destino,_,Transporte),
+    ligacao(Origem,Destino,_,Transporte,_,_),
     format('A ligação [~w]-[~w] com o transporte [~w] já existe.\n\n', [Origem, Destino, Transporte]),!;
-    meio_transporte(Transporte,_,_,_),
+    meio_transporte(Transporte,_,Hora_inicial,Hora_final),
     membro(_,Origem, _),
     membro(_,Destino, _),
-    assert(ligacao(Origem, Destino, Distancia, Transporte)),
+    assert(ligacao(Origem, Destino, Distancia, Transporte, Hora_inicial, Hora_final)),
     format('A ligação [~w]-[~w] com o transporte [~w] foi criada com sucesso.\n\n',[Origem,Destino, Transporte]),!;
     write('Para fazer ligações ambos os membros e o meio de transporte têm que existir na rede de distribuição.\n\n'),nl.
 
@@ -375,11 +375,12 @@ verifica_alterar_equipamento(Descricao, Membro_pertencente, Novo_nome, Novo_memb
     format('O membro [~w] não possui o equipamento [~w], portanto não é possível alterar.\n\n', [Membro_pertencente,Descricao]).
 
 verifica_alterar_ligacao(Origem, Destino, Nova_origem, Novo_destino, Nova_distancia, Transporte, Novo_transporte):-
-    ligacao(Nova_origem, Novo_destino,_,Novo_transporte),
+    ligacao(Nova_origem, Novo_destino,_,Novo_transporte,_,_),
     format('A ligação [~w]-[~w] com o transporte [~w] já existe.\n\n', [Nova_origem, Novo_destino, Novo_transporte]),!;
-    ligacao(Origem, Destino,_,Transporte),
-    retract(ligacao(Origem, Destino,_,Transporte)),
-    assert(ligacao(Nova_origem, Novo_destino, Nova_distancia, Novo_transporte)),
+    ligacao(Origem, Destino,_,Transporte,_,_),
+    retract(ligacao(Origem, Destino,_,Transporte,_,_)),
+    meio_transporte(Novo_transporte,_,Hora_inicial,Hora_final),
+    assert(ligacao(Nova_origem, Novo_destino, Nova_distancia, Novo_transporte,Hora_inicial, Hora_final)),
     format('A ligação [~w]-[~w] de [~w] foi alterada com sucesso para [~w]-[~w] de [~w].\n\n', [Origem,Destino,Transporte,Nova_origem,Novo_destino,Novo_transporte]),!;
     format('A ligação [~w]-[~w] de [~w] não existe.\n\n', [Origem,Destino,Transporte]).
 
@@ -402,15 +403,15 @@ remover_membro_equipamento(Membro_pretendido):-
     ).
 
 remover_membro_ligacoes(Membro_pretendido):-
-    ( ligacao(Membro_pretendido,_,_,_) ->
+    ( ligacao(Membro_pretendido,_,_,_,_,_) ->
             retractall(ligacao(Membro_pretendido,_,_,_)),
             format('As ligações com origem no membro [~w] foram eliminadas.\n\n', [Membro_pretendido])
             ;
             format('Não há ligações com o membro [~w] na origem a eliminar.\n\n', [Membro_pretendido])
     ),
 
-    ( ligacao(_,Membro_pretendido,_,_) ->
-                         retractall(ligacao(_,Membro_pretendido,_,_)),
+    ( ligacao(_,Membro_pretendido,_,_,_,_) ->
+                         retractall(ligacao(_,Membro_pretendido,_,_,_,_)),
                          format('As ligações com destino no membro [~w] foram eliminadas.\n\n', [Membro_pretendido])
                          ;
                          format('Não há ligações com o membro [~w] no destino a eliminar.\n\n', [Membro_pretendido])
@@ -423,8 +424,8 @@ verifica_remover_equipamento(Equipamento_pretendido, Membro_pretendido):-
     format('O membro [~w] não tem o equipamento [~w].\n\n', [Membro_pretendido, Equipamento_pretendido]).
 
 verifica_remover_ligacao(Origem, Destino, Transporte):-
-    ligacao(Origem, Destino,_,Transporte),
-    retract(ligacao(Origem, Destino,_,_)),
+    ligacao(Origem, Destino,_,Transporte,_,_),
+    retract(ligacao(Origem, Destino,_,_,_,_)),
     format('A ligação [~w]-[~w] de [~w] foi removida com sucesso.\n\n', [Origem, Destino, Transporte]),!;
     format('A ligação [~w]-[~w] de [~w] não existe.\n\n', [Origem, Destino, Transporte]).
 
