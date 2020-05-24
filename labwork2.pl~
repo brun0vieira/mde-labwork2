@@ -289,16 +289,16 @@ listar_transportes_horarios:-
     write('** Listar transportes e horários disponíveis entre dois membros **\n\n'),
     opcao_aux('Membro 1: ', '[Insira o primeiro membro]', Membro_1),
     opcao_aux('Membro 2: ', '[Insira o segundo membro]', Membro_2),
-    listar_transportes_membros(Membro_1, Membro_2).
+    transportes_horarios(Membro_1, Membro_2).
 
-listar_transportes_membros(Membro_1, Membro_2):-
+transportes_horarios(Membro_1, Membro_2):-
     % Lista_1 -> transportes membro_1-membro_2
     findall([Transporte,Hora_inicial,Hora_final], ligacao(Membro_1,Membro_2,_,Transporte,Hora_inicial, Hora_final), Lista_1),
     % Lista_2 -> transportes membro_2-membro_1
     findall([Transporte,Hora_inicial,Hora_final], ligacao(Membro_2,Membro_1,_,Transporte,Hora_inicial,Hora_final), Lista_2),
     % Lista_3 -> Lista_1+Lista_2
     append(Lista_1,Lista_2,Lista_3),
-    format('Os transportes disponíveis para viagens entre [~w] e [~w] com os respetivos horários são:\n~w.\n\n', [Membro_1,Membro_2,Lista_3]).
+    format('Os transportes disponíveis para viagens entre [~w] e [~w] com os respetivos horários são:\n\n~w.\n\n', [Membro_1,Membro_2,Lista_3]).
 
 bd(1):-
     write('por implementar').
