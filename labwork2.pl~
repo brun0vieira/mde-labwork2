@@ -1,4 +1,4 @@
-:-dynamic membro/2. % membro - nome, localizacao
+:-dynamic membro/3. % membro - tipo, nome, localizacao
 :-dynamic meio_transporte/4. % meio de transporte - descricao, velocidade (km/h), hora_inicial, hora_final
 :-dynamic equipamento/2. % equipamento - descricao, membro pertencente
 :-dynamic ligacao/4. % ligacao - origem, destino, distancia, meio de transporte
@@ -52,7 +52,7 @@ menu_gestao:-
     write('  8. Alterar ligações entre membros.'),nl,
     write('  9. Alterar ...'),nl,nl,
     write('10. Remover membros da rede.'),nl,
-    write('11. Remover de protecção existentes nos membros.'),nl,
+    write('11. Remover equipamentos de protecção existentes nos membros.'),nl,
     write('12. Remover ligações entre membros'),nl,
     write('13. Remover ...'),nl,nl,
     write('14. Voltar ao menu anterior.'),nl,
@@ -67,7 +67,7 @@ menu_consulta:-
     write('Consultas à base de conhecimento'),nl,nl,
     write('  1. Listar membros da rede.'),nl,
     write('  2. Listar equipamentos de protecção existentes.'),nl,
-    write('  3. Listar cidades por equipamento existente.'),nl,
+    write('  3. Listar cidades por tipo de membro.'),nl,
     write('  4. Listar itinerários entre membros.'),nl,nl,
     write('  5. Obter itinerário entre membros com menor distancia'),nl,
     write('  6. Obter itinerário entre membros com maior distância.'),nl,
@@ -145,9 +145,10 @@ gestao(14):-
 
 adicionar_membro:-
     write('** Adicionar membro à rede. **'),nl,nl,
-    opcao_aux('Nome: ', [clinica, hospital, supermercado, etc], Nome),
+    opcao_aux('Tipo: ', '[Tipo do membro (clinica, hospital, etc)]', Tipo),
+    opcao_aux('Nome: ', '[Nome do membro]', Nome),
     opcao_aux('Localizacao: ', '[Inserir localidade ou cidade]', Localizacao),
-    verifica_membro(Nome, Localizacao).
+    verifica_membro(Tipo, Nome, Localizacao).
 
 adicionar_transporte:-
     write('** Adicionar meio de transporte à rede. ***'), nl,nl,
@@ -183,9 +184,10 @@ alterar_meio_transporte:-
 alterar_membro:-
     write('** Alterar membro **\n\n'),
     opcao_aux('Membro: ', '[Membro a alterar]', Nome),
+    opcao_aux('Tipo: ', '[Novo tipo para o membro]', Novo_tipo),
     opcao_aux('Nome: ', '[Novo nome para o membro]', Novo_nome),
     opcao_aux('Localização: ', '[Nova localização para o membro]', Nova_localizacao),
-    verifica_alterar_membro(Nome, Novo_nome, Nova_localizacao).
+    verifica_alterar_membro(Nome, Novo_tipo, Novo_nome, Nova_localizacao).
 
 alterar_equipamento:-
     write('** Alterar equipamento de protecção existentes **\n\n'),
@@ -207,11 +209,22 @@ alterar_ligacao:-
 
 
 remover_membro:-
-    write('Remover membro').
+    write('** Remover membro da rede de distribuição.\n\n'),
+    opcao_aux('Membro: ', '[Membro a remover da rede]', Membro_pretendido),
+    verifica_remover_membro(Membro_pretendido).
+
 remover_equipamento:-
-    write('Remover equipamento').
+    write('** Remover equipamentos existentes nos membros. **\n\n'),
+    opcao_aux('Equipamento: ', '[Equipamento a eliminar]', Equipamento_pretendido),
+    opcao_aux('Membro: ', '[Membro a que se pretende eliminar o equipamento]', Membro_pretendido),
+    verifica_remover_equipamento(Equipamento_pretendido, Membro_pretendido).
+
 remover_ligacao:-
-    write('Remover ligacao').
+    write('** Remover ligação entre membros da rede **\n\n'),
+    opcao_aux('Origem: ', '[Origem da ligação a eliminar]', Origem),
+    opcao_aux('Destino: ', '[Destino da ligação a eliminar]',Destino),
+    verifica_remover_ligacao(Origem, Destino).
+
 %-----------------------------------------------------------
 % Consulta à base de conhecimentos
 %-----------------------------------------------------------
@@ -221,7 +234,7 @@ consulta(1):-
 consulta(2):-
     listar_equipamento.
 consulta(3):-
-    listar_ligacoes.
+    listar_cidades.
 consulta(4):-
     write('por implementar').
 consulta(5):-
@@ -242,7 +255,7 @@ consulta(10):-
     run.
 
 listar_membros:-
-    findall([Nome,Localizacao], membro(Nome, Localizacao), Lista_membros),
+    findall([Tipo,Nome,Localizacao], membro(Tipo, Nome, Localizacao), Lista_membros),
     format('Membros da rede:\n~w\n\n', [Lista_membros]).
 
 listar_equipamento:-
@@ -256,6 +269,12 @@ listar_ligacoes:-
 listar_transporte:-
     findall([Descricao, Velocidade, Hora_inicial, Hora_final], meio_transporte(Descricao, Velocidade, Hora_inicial, Hora_final), Lista),
     format('Meios de transporte:\n~w\n\n', [Lista]).
+
+listar_cidades:-
+    write('** Listar cidades por tipo de membro **\n\n'),
+    opcao_aux('Tipo: ', '[Tipo de membro]', Tipo),
+    findall([Nome,Localizacao], membro(Tipo,Nome,Localizacao), Lista),
+    format('Cidades onde existem membros do tipo [~w]:\n~w\n\n', [Tipo, Lista]).
 
 bd(1):-
     write('por implementar').
@@ -273,10 +292,10 @@ opcao_aux(Imprime, Opcoes, Opcao):-
     write(Imprime),
     ler_buffer(Opcao).
 
-verifica_membro(Nome, Localizacao):-
-    membro(Nome, _),
+verifica_membro(Tipo, Nome, Localizacao):-
+    membro(_,Nome, _),
     format('~w já existe na rede.\n\n', [Nome]),!;
-    assert(membro(Nome, Localizacao)),
+    assert(membro(Tipo, Nome, Localizacao)),
     format('~w adicionado(a) em ~w.\n\n', [Nome, Localizacao]).
 
 verifica_meio_transporte(Descricao, Velocidade,Hora_inicial,Hora_final):-
@@ -297,18 +316,18 @@ verifica_equipamento(Descricao, Membro_pertencente):-
 verifica_ligacao(Origem, Destino, Distancia, Transporte):-
     ligacao(Origem, Destino,_,_),
     format('A ligação [~w]-[~w] já existe.\n\n', [Origem, Destino]),!;
-    membro(Origem, _),
-    membro(Destino, _),
+    membro(_,Origem, _),
+    membro(_,Destino, _),
     assert(ligacao(Origem, Destino, Distancia, Transporte)),
     format('A ligação [~w]-[~w] foi criada com sucesso.\n\n',[Origem,Destino]),!;
     write('Para fazer ligações ambos os membros têm que existir na rede de distribuição.'),nl.
 
-verifica_alterar_membro(Nome, Novo_nome, Nova_localizacao):-
-    membro(Novo_nome,_),
+verifica_alterar_membro(Nome, Novo_tipo, Novo_nome, Nova_localizacao):-
+    membro(_,Novo_nome,_),
     format('[~w] já existe na rede de distribuição.\n\n', [Novo_nome]),!;
-    membro(Nome,_),
-    retract(membro(Nome,_)),
-    assert(membro(Novo_nome, Nova_localizacao)),
+    membro(_,Nome,_),
+    retract(membro(_,Nome,_)),
+    assert(membro(Novo_tipo, Novo_nome, Nova_localizacao)),
     format('[~w] alterado com sucesso para [~w] com a localização [~w].\n\n', [Nome, Novo_nome, Nova_localizacao]),!;
     format('[~w] não existe na rede de distribuição.\n\n', [Nome]).
 
@@ -332,21 +351,61 @@ verifica_alterar_equipamento(Descricao, Membro_pertencente, Novo_nome, Novo_memb
 
 verifica_alterar_ligacao(Origem, Destino, Nova_origem, Novo_destino, Nova_distancia, Transporte):-
     ligacao(Nova_origem, Novo_destino,_,_),
-    format('A ligação [~w]-[~w] já existe.\n\n'),!;
+    format('A ligação [~w]-[~w] já existe.\n\n', [Nova_origem, Novo_destino]),!;
     ligacao(Origem, Destino,_,_),
     retract(ligacao(Origem, Destino,_,_)),
-    assert(ligacao(Nova_origem, Novo_destino, Nova_distancia, Transporte)),!;
+    assert(ligacao(Nova_origem, Novo_destino, Nova_distancia, Transporte)),
+    format('A ligação [~w]-[~w] foi alterada com sucesso para [~w]-[~w]', [Origem,Destino,Nova_origem,Novo_destino]),!;
     format('A ligação [~w]-[~w] não existe.\n\n').
+
+verifica_remover_membro(Membro_pretendido):-
+    membro(_,Membro_pretendido,_),
+    % falta eliminar o equipamento e as ligacoes onde o membro pretendido se encontre
+    remover_membro_equipamento(Membro_pretendido),
+    remover_membro_ligacoes(Membro_pretendido),
+    retract(membro(_,Membro_pretendido,_)),
+    format('O membro [~w] foi eliminado da rede.\n\n', [Membro_pretendido]),!;
+    format('O membro [~w] não existe na rede.\n\n', [Membro_pretendido]).
+
+% Remove as ligações e os equipamentos pertencentes ao membro a eliminar
+remover_membro_equipamento(Membro_pretendido):-
+    ( equipamento(_, Membro_pretendido) ->
+            retractall(equipamento(_,Membro_pretendido)),
+            format('Os equipamentos pertencentes ao membro [~w] foram eliminados.\n\n', [Membro_pretendido])
+            ;
+            continue
+    ).
+
+remover_membro_ligacoes(Membro_pretendido):-
+    ( ligacao(Membro_pretendido,_,_,_) ->
+            retractall(ligacao(Membro_pretendido,_,_,_)),
+            format('As ligações com origem no membro [~w] foram eliminadas.\n\n', [Membro_pretendido])
+            ;
+            continue
+    ),
+
+    ( ligacao(_,Membro_pretendido,_,_) ->
+                         retractall(ligacao(_,Membro_pretendido,_,_)),
+                         format('As ligações com destino no membro [~w] foram eliminadas.\n\n', [Membro_pretendido])
+                         ;
+                         continue
+    ).
+
+verifica_remover_equipamento(Equipamento_pretendido, Membro_pretendido):-
+    equipamento(Equipamento_pretendido, Membro_pretendido),
+    retract(equipamento(Equipamento_pretendido, Membro_pretendido)),
+    format('[~w] eliminado do membro [~w].\n\n', [Equipamento_pretendido, Membro_pretendido]),!;
+    format('O membro [~w] não tem o equipamento [~w].\n\n', [Membro_pretendido, Equipamento_pretendido]).
+
+verifica_remover_ligacao(Origem, Destino):-
+    ligacao(Origem, Destino,_,_),
+    retract(ligacao(Origem, Destino,_,_)),
+    format('A ligação [~w]-[~w] foi removida com sucesso.\n\n', [Origem, Destino]),!;
+    format('A ligação [~w]-[~w] não existe.\n\n', [Origem, Destino]).
 
 voltar_menu_anterior:-
     write('Pressione \'1\' para voltar ao menu anterior.'), nl,
     ler_opcao(_Opcao, 1, 1).
-
-
-
-
-
-
 
 
 
