@@ -89,7 +89,7 @@ base_dados:-
     write('  3. Voltar ao menu anterior.'),nl,
     ler_opcao(Opcao, 1, 3),
     bd(Opcao),
-    base_dados.
+    voltar_menu_anterior.
 
 info:-
     limpar_ecra,
@@ -240,7 +240,7 @@ consulta(3):-
 consulta(4):-
     listar_transportes_horarios.
 consulta(5):-
-    write('por implementar').
+    listar_itinerarios_membros.
 consulta(6):-
     write('por implementar').
 consulta(7):-
@@ -258,11 +258,20 @@ consulta(10):-
 
 listar_membros:-
     findall([Tipo,Nome,Localizacao], membro(Tipo, Nome, Localizacao), Lista_membros),
-    format('Membros da rede:\n~w\n\n', [Lista_membros]).
+    write('Membros da rede de distribuição:\n\n'),
+    (   Lista_membros = [] ->
+                write(Lista_membros),nl,nl;
+                pretty_display(Lista_membros,'Membro '),nl
+    ).
+
 
 listar_equipamento:-
     findall([Descricao,Membro_pertencente], equipamento(Descricao, Membro_pertencente), Lista_equipamento),
-    format('Equipamentos:\n~w\n\n', [Lista_equipamento]).
+    write('Equipamentos de proteção e membro correspondente:\n\n'),
+    (   Lista_equipamento = [] ->
+                 write(Lista_equipamento),nl,nl;
+                 pretty_display(Lista_equipamento,'Equipamento '),nl
+    ).
 
 /*
 listar_ligacoes:-
@@ -273,13 +282,17 @@ listar_transporte:-
     findall([Descricao, Velocidade, Hora_inicial, Hora_final], meio_transporte(Descricao, Velocidade, Hora_inicial, Hora_final), Lista),
     format('Meios de transporte:\n~w\n\n', [Lista]).
 */
+
 listar_cidades:-
     write('** Listar cidades por tipo de membro **\n\n'),
     opcao_aux('Tipo: ', '[Tipo de membro]', Tipo),
     findall([Localizacao], membro(Tipo,_,Localizacao), Lista),
-    % falta remover os valores duplicados na Lista
     uniq(Lista, Lista_atualizada),
-    format('Cidades onde existem membros do tipo [~w]:\n~w\n\n', [Tipo, Lista_atualizada]).
+    format('Cidades onde existem membros do tipo [~w]:\n\n', [Tipo]),
+    (   Lista_atualizada = [] ->
+                 write(Lista_atualizada),nl,nl;
+                 pretty_display(Lista_atualizada,'Cidade '),nl
+    ).
 
 % sort -> ordena e remove os valores duplicados.
 uniq(Data,Uniques):- sort(Data, Uniques).
@@ -298,18 +311,42 @@ transportes_horarios(Membro_1, Membro_2):-
     findall([Transporte,Hora_inicial,Hora_final], ligacao(Membro_2,Membro_1,_,Transporte,Hora_inicial,Hora_final), Lista_2),
     % Lista_3 -> Lista_1+Lista_2
     append(Lista_1,Lista_2,Lista_3),
-    format('Os transportes disponíveis para viagens entre [~w] e [~w] com os respetivos horários são:\n\n~w.\n\n', [Membro_1,Membro_2,Lista_3]).
+    format('Os transportes disponíveis para viagens entre [~w] e [~w] com os respetivos horários são:\n\n', [Membro_1,Membro_2]),
+    (   Lista_3 = [] ->
+               write(Lista_3),nl,nl;
+               pretty_display(Lista_3,'Transporte '),nl
+    ).
+% falta a distancia total
+listar_itinerarios_membros:-
+    write('** Listar itinerários possíveis entre dois membros **\n\n'),
+    opcao_aux('Origem: ', '[membro de origem]', Origem),
+    opcao_aux('Destino: ', '[membro de destino]', Destino),
+    membro(_,Origem,_),
+    membro(_,Destino,_),
+    findall(X,caminho(Origem,Destino,X),Lista),
+    write('Os itinerários possíveis são:'),nl,
+    pretty_display(Lista,'Rota '),nl,nl,!;
+    write('Ambos os membros têm de pertencer à rede.\n\n').
+
+caminho(X,Y,[via(X,Y)]):-
+    ligacao(X,Y,_,_,_,_).
+
+caminho(X,Y,[via(X,Z)|R]):-
+    ligacao(X,Z,_,_,_,_),
+    caminho(Z,Y,R).
+
+
 
 bd(1):-
-    write('por implementar').
+    importar_base_dados.
 
 bd(2):-
-    write('por implementar').
+    eliminar_base_dados.
 
 bd(3):-
     run.
 
-% Funcoes auxiliares
+% Aux
 
 opcao_aux(Imprime, Opcoes, Opcao):-
     write(Opcoes),nl,
@@ -432,6 +469,118 @@ verifica_remover_ligacao(Origem, Destino, Transporte):-
 voltar_menu_anterior:-
     write('Pressione \'1\' para voltar ao menu anterior.'), nl,
     ler_opcao(_Opcao, 1, 1).
+
+
+pretty_display(Lista,Tipo) :- pdisplay(Lista, 0, Tipo).
+
+pdisplay([Lista], N, Tipo):- N1 is N+1, displaymember(N1,Lista, Tipo).
+pdisplay([Lista|R], N, Tipo):- N1 is N+1, displaymember(N1,Lista, Tipo),pdisplay(R,N1, Tipo).
+
+
+displaymember(N,Lista,Tipo):-write(Tipo), write(N), write(': '), dmember(Lista),nl.
+
+dmember([Lista]):-write(Lista).
+dmember([Lista|R]):-write(Lista),write('-'),dmember(R).
+
+% BASE DE DADOS
+
+importar_base_dados:-
+
+    assert(membro(hospital,lusiadas,faro)),
+    assert(membro(clinica,aqualab,faro)),
+    assert(membro(armazem,'alcool corp',beja)),
+    assert(membro(clinica,'beja clinic',beja)),
+    assert(membro(hospital,'garcia da orta',setubal)),
+    assert(membro(hospital,'cuf caparica',setubal)),
+    assert(membro(hospital,'cuf evora',evora)),
+    assert(membro(armazem,'mascaras lda',evora)),
+    assert(membro(clinica,luz,lisboa)),
+    assert(membro(clinica,alvalade,lisboa)),
+    assert(membro(armazem,'viseiras lda',portalegre)),
+    assert(membro(armazem,'ventiladores lda',santarem)),
+    assert(membro(clinica,'luis lourenco',leiria)),
+    assert(membro(armazem,'luvas lda','castelo branco')),
+    assert(membro(hospital,'centro hospitalar universitario',coimbra)),
+    assert(membro(clinica,'martins de sousa',guarda)),
+    assert(membro(hospital,'santa maria',aveiro)),
+    assert(membro(armazem,'protecao lda',viseu)),
+    assert(membro(hospital,'cuf porto',porto)),
+    assert(membro(armazem,'alcool gel lda',braganca)),
+    assert(membro(clinica,'joao reis','vila real')),
+    assert(membro(hospital,'cuf braga',braga)),
+    assert(membro(clinica,'castelo clinic','viana do castelo')),
+
+    assert(meio_transporte(carro,80,'08:00','20:00')),
+    assert(meio_transporte(carrinha,70,'01:00','12:00')),
+    assert(meio_transporte(comboio,120,'05:00','17:00')),
+    assert(meio_transporte(helicopetro,250,'12:00','18:00')),
+
+    assert(equipamento(ventilador,lusiadas)),
+    assert(equipamento(luvas,aqualab)),
+    assert(equipamento(alcool,'alcool corp')),
+    assert(equipamento(mascara,'beja clinic')),
+    assert(equipamento(viseira,'garcia da orta')),
+    assert(equipamento(bata,'cuf caparica')),
+    assert(equipamento(oculos,'cuf evora')),
+    assert(equipamento(mascara,'mascaras lda')),
+    assert(equipamento(touca,luz)),
+    assert(equipamento(cogula,alvalade)),
+    assert(equipamento(viseira,'viseiras lda')),
+    assert(equipamento(ventilador,'ventiladores lda')),
+    assert(equipamento(zaragatoa,'luis lourenco')),
+    assert(equipamento(luvas,'luvas lda')),
+    assert(equipamento('alcool gel','centro hospitalar universitario')),
+    assert(equipamento('protecao de calcado','martins de sousa')),
+    assert(equipamento(manguitos,'santa maria')),
+    assert(equipamento('mascara cirurgica','protecao lda')),
+    assert(equipamento('bata cirurgica','cuf porto')),
+    assert(equipamento(alcool,'alcool gel lda')),
+    assert(equipamento(mascara,'joao reis')),
+    assert(equipamento(viseira,'cuf braga')),
+    assert(equipamento(cogula,'castelo clinic')),
+
+    assert(ligacao(aqualab,lusiadas,80,carrinha,'01:00','12:00')),
+    assert(ligacao(aqualab,'beja clinic',80,carrinha,'01:00','12:00')),
+    assert(ligacao('beja clinic','alcool corp',50,carro,'08:00','20:00')),
+    assert(ligacao('alcool corp','cuf evora',50,carro,'08:00','20:00')),
+    assert(ligacao('cuf evora','mascaras lda',30,carrinha,'01:00','12:00')),
+    assert(ligacao('mascaras lda','viseiras lda',60,carrinha,'01:00','12:00')),
+    assert(ligacao(lusiadas,'cuf caparica',100,carrinha,'01:00','12:00')),
+    assert(ligacao('cuf caparica','garcia da orta',40,carrinha,'01:00','12:00')),
+    assert(ligacao('garcia da orta','cuf evora',50,carrinha,'01:00','12:00')),
+    assert(ligacao('garcia da orta',luz,60,carro,'08:00','20:00')),
+    assert(ligacao('garcia da orta',alvalade,30,carro,'08:00','20:00')),
+    assert(ligacao(luz,alvalade,20,carro,'08:00','20:00')),
+    assert(ligacao(alvalade,'ventiladores lda',40,carrinha,'01:00','12:00')),
+    assert(ligacao('viseiras lda','ventiladores lda',50,comboio,'05:00','17:00')),
+    assert(ligacao('viseiras lda','luvas lda',120,comboio,'05:00','17:00')),
+    assert(ligacao('ventiladores lda','luis lourenco',20,carrinha,'01:00','12:00')),
+    assert(ligacao('ventiladores lda','protecao lda',220,comboio,'05:00','17:00')),
+    assert(ligacao('luis lourenco','centro hospitalar universitario',40,carrinha,'01:00','12:00')),
+    assert(ligacao('centro hospitalar universitario','santa maria',40,carrinha,'01:00','12:00')),
+    assert(ligacao('santa maria','cuf porto',25,carro,'08:00','20:00')),
+    assert(ligacao('protecao lda','cuf porto',80,carrinha,'01:00','12:00')),
+    assert(ligacao('luvas lda', 'protecao lda',120,comboio,'05:00','17:00')),
+    assert(ligacao('cuf porto','castelo clinic',70,carro,'08:00','20:00')),
+    assert(ligacao('protecao lda','joao reis',80,comboio,'05:00','17:00')),
+    assert(ligacao('joao reis','cuf braga',50,carro,'08:00','20:00')),
+    assert(ligacao('cuf braga','castelo clinic',40,carro,'08:00','20:00')),
+    assert(ligacao('luvas lda','alcool gel lda',150, helicopetro,'12:00','18:00')),
+    assert(ligacao('luvas lda','martins de sousa',50,comboio,'05:00','17:00')),
+    assert(ligacao('martins de sousa','alcool gel lda',50,comboio,'05:00','17:00')),
+    assert(ligacao('protecao lda','alcool gel lda',120,comboio,'05:00','17:00')),
+    write('Base de dados importada com sucesso.\n\n').
+
+eliminar_base_dados:-
+    retractall(membro(_,_,_)),
+    retractall(meio_transporte(_,_,_,_)),
+    retractall(equipamento(_,_)),
+    retractall(ligacao(_,_,_,_,_,_)),
+    write('Base de dados eliminada com sucesso.\n\n').
+
+
+
+
 
 
 
