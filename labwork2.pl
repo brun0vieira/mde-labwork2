@@ -1,7 +1,9 @@
+:-consult('base_dados.pl').
+
 :-dynamic membro/3. % membro - tipo, nome, localizacao
 :-dynamic meio_transporte/4. % meio de transporte - descricao, velocidade (km/h), hora_inicial, hora_final
 :-dynamic equipamento/2. % equipamento - descricao, membro pertencente
-:-dynamic ligacao/6. % ligacao - origem, destino, distancia, meio de transporte, hora_inicial, hora_final
+:-dynamic ligacao/7. % ligacao - origem, destino, distancia, meio de transporte, hora_inicial, hora_final, equipamento a transportar
 
 run:-
     limpar_ecra,
@@ -73,9 +75,11 @@ menu_consulta:-
     write('  6. Obter itinerário entre membros com menor distancia'),nl,
     write('  7. Obter itinerário entre membros com maior distância.'),nl,
     write('  8. Obter itinerário entre membros com passagem por outros membros.'),nl,
-    write('  9. Obter ...'),nl,nl,
-    write('10. Voltar ao menu anterior.'),nl,
-    ler_opcao(Opcao, 1, 10),
+    write('  9. Obter itinerário entre membros passando em membros com determinados equipamentos.'),nl,
+    write('10. Obter membros por cidade pretendida.'),nl,
+    write('11. Obter a centralidade de um membro.'),nl,nl,
+    write('12. Voltar ao menu anterior.'),nl,
+    ler_opcao(Opcao, 1, 12),
     limpar_ecra,
     consulta(Opcao),
     voltar_menu_anterior,
@@ -242,14 +246,18 @@ consulta(4):-
 consulta(5):-
     listar_itinerarios_membros.
 consulta(6):-
-    write('por implementar').
+    listar_menor_itinerario.
 consulta(7):-
-    write('por implementar').
+    listar_maior_itinerario.
 consulta(8):-
-    write('por implementar').
+    listar_itinerarios_ponto_intermedio.
 consulta(9):-
-    write('por implementar').
+    listar_itinerarios_equipamento.
 consulta(10):-
+    obter_membros_cidade.
+consulta(11):-
+    centralidade_membro.
+consulta(12):-
     run.
 
 % Returns to main menu
@@ -272,16 +280,6 @@ listar_equipamento:-
                  write(Lista_equipamento),nl,nl;
                  pretty_display(Lista_equipamento,'Equipamento '),nl
     ).
-
-/*
-listar_ligacoes:-
-    findall([Origem, Destino, Distancia, Transporte], ligacao(Origem, Destino, Distancia, Transporte), Lista),
-    format('Ligações:\n~w\n\n', [Lista]).
-
-listar_transporte:-
-    findall([Descricao, Velocidade, Hora_inicial, Hora_final], meio_transporte(Descricao, Velocidade, Hora_inicial, Hora_final), Lista),
-    format('Meios de transporte:\n~w\n\n', [Lista]).
-*/
 
 listar_cidades:-
     write('** Listar cidades por tipo de membro **\n\n'),
@@ -306,9 +304,9 @@ listar_transportes_horarios:-
 
 transportes_horarios(Membro_1, Membro_2):-
     % Lista_1 -> transportes membro_1-membro_2
-    findall([Transporte,Hora_inicial,Hora_final], ligacao(Membro_1,Membro_2,_,Transporte,Hora_inicial, Hora_final), Lista_1),
+    findall([Transporte,Hora_inicial,Hora_final], ligacao(Membro_1,Membro_2,_,Transporte,Hora_inicial, Hora_final,_), Lista_1),
     % Lista_2 -> transportes membro_2-membro_1
-    findall([Transporte,Hora_inicial,Hora_final], ligacao(Membro_2,Membro_1,_,Transporte,Hora_inicial,Hora_final), Lista_2),
+    findall([Transporte,Hora_inicial,Hora_final], ligacao(Membro_2,Membro_1,_,Transporte,Hora_inicial,Hora_final,_), Lista_2),
     % Lista_3 -> Lista_1+Lista_2
     append(Lista_1,Lista_2,Lista_3),
     format('Os transportes disponíveis para viagens entre [~w] e [~w] com os respetivos horários são:\n\n', [Membro_1,Membro_2]),
@@ -323,19 +321,94 @@ listar_itinerarios_membros:-
     opcao_aux('Destino: ', '[membro de destino]', Destino),
     membro(_,Origem,_),
     membro(_,Destino,_),
-    findall(X,caminho(Origem,Destino,X),Lista),
+    findall([A,Distancia],caminho(Origem,Destino,A,Distancia),Lista),
     write('Os itinerários possíveis são:'),nl,
-    pretty_display(Lista,'Rota '),nl,nl,!;
+    pretty_display(Lista,'Itinerário '),nl,!;
     write('Ambos os membros têm de pertencer à rede.\n\n').
 
-caminho(X,Y,[via(X,Y)]):-
-    ligacao(X,Y,_,_,_,_).
+caminho(A,B,[via(A,B)],Distancia):-
+    ligacao(A,B,Distancia,_,_,_,_).
 
-caminho(X,Y,[via(X,Z)|R]):-
-    ligacao(X,Z,_,_,_,_),
-    caminho(Z,Y,R).
+caminho(A,B,[via(A,C)|D],Distancia):-
+    ligacao(A,C,D1,_,_,_,_),
+    caminho(C,B,D,D2),
+    Distancia is D1+D2.
+
+listar_menor_itinerario:-
+    write('** Listar menor itinerário entre dois membros **\n\n'),
+    opcao_aux('Origem: ', '[membro de origem]', Origem),
+    opcao_aux('Destino: ', '[membro de destino]', Destino),
+    membro(_,Origem,_),
+    membro(_,Destino,_),
+    findall(Distancia,caminho(Origem,Destino,_,Distancia),Lista_1),
+    find_min(Lista_1,Min),
+    findall(Iti,(caminho(aqualab,'cuf evora',Iti,D),D=Min),Lista_2),
+    pretty_display(Lista_2,'Itinerário '),
+    format('Distância: ~w km.',[Min]),nl,nl,!;
+    write('Ambos os membros necessitam de estar na rede de distribuição.\n\n').
+
+find_min([L|Ls], Min):-
+    find_min(Ls, L, Min).
+
+find_min([], Min, Min).
+
+find_min([L|Ls],Min0, Min):-
+    Min1 is min(L,Min0),
+    find_min(Ls,Min1,Min).
+
+listar_maior_itinerario:-
+    write('** Listar maior itinerário entre dois membros **\n\n'),
+    opcao_aux('Origem: ', '[membro de origem]', Origem),
+    opcao_aux('Destino: ', '[membro de destino]', Destino),
+    membro(_,Origem,_),
+    membro(_,Destino,_),
+    findall(Distancia,caminho(Origem,Destino,_,Distancia),Lista_1),
+    find_max(Lista_1, Max),
+    findall(Iti,(caminho(aqualab,'cuf evora',Iti,D),D=Max),Lista_2),
+    pretty_display(Lista_2,'Itinerário '),
+    format('Distância: ~w km.',[Max]),nl,nl,!;
+    write('Ambos os membros necessitam de estar na rede de distribuição.\n\n').
+
+find_max([L|Ls],Max):-
+    foldl(num_max,Ls,L,Max).
+
+num_max(X,Y,Max):-
+    Max is max(X,Y).
+
+listar_itinerarios_ponto_intermedio:-
+    write('** Listar itinerários entre dois membros, passando por um ou dois membros **\n\n').
 
 
+listar_itinerarios_equipamento:-
+    write('** Listar itinerários entre dois membros, passando por membros que possuam determinados equipamentos **\n\n').
+
+obter_membros_cidade:-
+    write('** Obter membros numa cidade **\n\n'),
+    opcao_aux('Cidade: ', '[cidade pretendida]', Cidade),
+    verifica_membros_cidade(Cidade).
+
+centralidade_membro:-
+    write('** Obter o grau de centralidade de um membro **\n\n'),
+    opcao_aux('Membro: ', '[membro pretendido]', Membro_pretendido),
+    % Temos que descobrir quantas vezes o Membro_pretendido é o destino
+    findall(L,ligacao(L,Membro_pretendido,_,_,_,_,_),Lista),
+    %Lista contem o outro membro da ligacao
+    %Basta obtermos o comprimento da Lista e dividirmos o comprimento por (membros_total-1) para obtermos o grau de centralidade normalizado
+    len(Lista,Grau_entrada),
+    findall(G,membro(G,_,_),Lista_membros),
+    len(Lista_membros,Num_membros),
+    calcula_grau_normalizado(Grau_entrada,Num_membros,Grau_normalizado),
+    format('O membro [~w] tem um grau de centralidade de entrada (normalizado) de: [~6f].\n\n', [Membro_pretendido,Grau_normalizado]).
+
+calcula_grau_normalizado(Grau_entrada,Num_membros,Grau_normalizado):-
+    Grau_normalizado is Grau_entrada/(Num_membros-1).
+
+len([], LenResult):-
+    LenResult is 0.
+
+len([_X|Y], LenResult):-
+    len(Y, L),
+    LenResult is L + 1.
 
 bd(1):-
     importar_base_dados.
@@ -375,12 +448,13 @@ verifica_equipamento(Descricao, Membro_pertencente):-
     format('O membro ~w não existe na rede.\n\n', [Membro_pertencente]).
 
 verifica_ligacao(Origem, Destino, Distancia, Transporte):-
-    ligacao(Origem,Destino,_,Transporte,_,_),
+    ligacao(Origem,Destino,_,Transporte,_,_,_),
     format('A ligação [~w]-[~w] com o transporte [~w] já existe.\n\n', [Origem, Destino, Transporte]),!;
     meio_transporte(Transporte,_,Hora_inicial,Hora_final),
+    equipamento(Equip,Origem),
     membro(_,Origem, _),
     membro(_,Destino, _),
-    assert(ligacao(Origem, Destino, Distancia, Transporte, Hora_inicial, Hora_final)),
+    assert(ligacao(Origem, Destino, Distancia, Transporte, Hora_inicial, Hora_final,Equip)),
     format('A ligação [~w]-[~w] com o transporte [~w] foi criada com sucesso.\n\n',[Origem,Destino, Transporte]),!;
     write('Para fazer ligações ambos os membros e o meio de transporte têm que existir na rede de distribuição.\n\n'),nl.
 
@@ -412,12 +486,13 @@ verifica_alterar_equipamento(Descricao, Membro_pertencente, Novo_nome, Novo_memb
     format('O membro [~w] não possui o equipamento [~w], portanto não é possível alterar.\n\n', [Membro_pertencente,Descricao]).
 
 verifica_alterar_ligacao(Origem, Destino, Nova_origem, Novo_destino, Nova_distancia, Transporte, Novo_transporte):-
-    ligacao(Nova_origem, Novo_destino,_,Novo_transporte,_,_),
+    ligacao(Nova_origem, Novo_destino,_,Novo_transporte,_,_,_),
     format('A ligação [~w]-[~w] com o transporte [~w] já existe.\n\n', [Nova_origem, Novo_destino, Novo_transporte]),!;
-    ligacao(Origem, Destino,_,Transporte,_,_),
-    retract(ligacao(Origem, Destino,_,Transporte,_,_)),
+    ligacao(Origem, Destino,_,Transporte,_,_,_),
+    retract(ligacao(Origem, Destino,_,Transporte,_,_,_)),
     meio_transporte(Novo_transporte,_,Hora_inicial,Hora_final),
-    assert(ligacao(Nova_origem, Novo_destino, Nova_distancia, Novo_transporte,Hora_inicial, Hora_final)),
+    equipamento(Equipamento,Nova_origem),
+    assert(ligacao(Nova_origem, Novo_destino, Nova_distancia, Novo_transporte,Hora_inicial, Hora_final,Equipamento)),
     format('A ligação [~w]-[~w] de [~w] foi alterada com sucesso para [~w]-[~w] de [~w].\n\n', [Origem,Destino,Transporte,Nova_origem,Novo_destino,Novo_transporte]),!;
     format('A ligação [~w]-[~w] de [~w] não existe.\n\n', [Origem,Destino,Transporte]).
 
@@ -430,6 +505,13 @@ verifica_remover_membro(Membro_pretendido):-
     format('O membro [~w] foi eliminado da rede.\n\n', [Membro_pretendido]),!;
     format('O membro [~w] não existe na rede.\n\n', [Membro_pretendido]).
 
+verifica_membros_cidade(Cidade):-
+    membro(_,_,Cidade),
+    findall(M, membro(_,M,Cidade),Lista),
+    format('Na cidade [~w] temos os seguintes membros:\n', [Cidade]),
+    write(Lista),nl,nl,!;
+    format('Não existe nenhum membro com a localizacao [~w].\n\n',[Cidade]).
+
 % Remove as ligações e os equipamentos pertencentes ao membro a eliminar
 remover_membro_equipamento(Membro_pretendido):-
     ( equipamento(_, Membro_pretendido) ->
@@ -440,14 +522,14 @@ remover_membro_equipamento(Membro_pretendido):-
     ).
 
 remover_membro_ligacoes(Membro_pretendido):-
-    ( ligacao(Membro_pretendido,_,_,_,_,_) ->
+    ( ligacao(Membro_pretendido,_,_,_,_,_,_) ->
             retractall(ligacao(Membro_pretendido,_,_,_)),
             format('As ligações com origem no membro [~w] foram eliminadas.\n\n', [Membro_pretendido])
             ;
             format('Não há ligações com o membro [~w] na origem a eliminar.\n\n', [Membro_pretendido])
     ),
 
-    ( ligacao(_,Membro_pretendido,_,_,_,_) ->
+    ( ligacao(_,Membro_pretendido,_,_,_,_,_) ->
                          retractall(ligacao(_,Membro_pretendido,_,_,_,_)),
                          format('As ligações com destino no membro [~w] foram eliminadas.\n\n', [Membro_pretendido])
                          ;
@@ -461,8 +543,8 @@ verifica_remover_equipamento(Equipamento_pretendido, Membro_pretendido):-
     format('O membro [~w] não tem o equipamento [~w].\n\n', [Membro_pretendido, Equipamento_pretendido]).
 
 verifica_remover_ligacao(Origem, Destino, Transporte):-
-    ligacao(Origem, Destino,_,Transporte,_,_),
-    retract(ligacao(Origem, Destino,_,_,_,_)),
+    ligacao(Origem, Destino,_,Transporte,_,_,_),
+    retract(ligacao(Origem, Destino,_,_,_,_,_)),
     format('A ligação [~w]-[~w] de [~w] foi removida com sucesso.\n\n', [Origem, Destino, Transporte]),!;
     format('A ligação [~w]-[~w] de [~w] não existe.\n\n', [Origem, Destino, Transporte]).
 
@@ -481,115 +563,3 @@ displaymember(N,Lista,Tipo):-write(Tipo), write(N), write(': '), dmember(Lista),
 
 dmember([Lista]):-write(Lista).
 dmember([Lista|R]):-write(Lista),write('-'),dmember(R).
-
-% BASE DE DADOS
-
-importar_base_dados:-
-
-    assert(membro(hospital,lusiadas,faro)),
-    assert(membro(clinica,aqualab,faro)),
-    assert(membro(armazem,'alcool corp',beja)),
-    assert(membro(clinica,'beja clinic',beja)),
-    assert(membro(hospital,'garcia da orta',setubal)),
-    assert(membro(hospital,'cuf caparica',setubal)),
-    assert(membro(hospital,'cuf evora',evora)),
-    assert(membro(armazem,'mascaras lda',evora)),
-    assert(membro(clinica,luz,lisboa)),
-    assert(membro(clinica,alvalade,lisboa)),
-    assert(membro(armazem,'viseiras lda',portalegre)),
-    assert(membro(armazem,'ventiladores lda',santarem)),
-    assert(membro(clinica,'luis lourenco',leiria)),
-    assert(membro(armazem,'luvas lda','castelo branco')),
-    assert(membro(hospital,'centro hospitalar universitario',coimbra)),
-    assert(membro(clinica,'martins de sousa',guarda)),
-    assert(membro(hospital,'santa maria',aveiro)),
-    assert(membro(armazem,'protecao lda',viseu)),
-    assert(membro(hospital,'cuf porto',porto)),
-    assert(membro(armazem,'alcool gel lda',braganca)),
-    assert(membro(clinica,'joao reis','vila real')),
-    assert(membro(hospital,'cuf braga',braga)),
-    assert(membro(clinica,'castelo clinic','viana do castelo')),
-
-    assert(meio_transporte(carro,80,'08:00','20:00')),
-    assert(meio_transporte(carrinha,70,'01:00','12:00')),
-    assert(meio_transporte(comboio,120,'05:00','17:00')),
-    assert(meio_transporte(helicopetro,250,'12:00','18:00')),
-
-    assert(equipamento(ventilador,lusiadas)),
-    assert(equipamento(luvas,aqualab)),
-    assert(equipamento(alcool,'alcool corp')),
-    assert(equipamento(mascara,'beja clinic')),
-    assert(equipamento(viseira,'garcia da orta')),
-    assert(equipamento(bata,'cuf caparica')),
-    assert(equipamento(oculos,'cuf evora')),
-    assert(equipamento(mascara,'mascaras lda')),
-    assert(equipamento(touca,luz)),
-    assert(equipamento(cogula,alvalade)),
-    assert(equipamento(viseira,'viseiras lda')),
-    assert(equipamento(ventilador,'ventiladores lda')),
-    assert(equipamento(zaragatoa,'luis lourenco')),
-    assert(equipamento(luvas,'luvas lda')),
-    assert(equipamento('alcool gel','centro hospitalar universitario')),
-    assert(equipamento('protecao de calcado','martins de sousa')),
-    assert(equipamento(manguitos,'santa maria')),
-    assert(equipamento('mascara cirurgica','protecao lda')),
-    assert(equipamento('bata cirurgica','cuf porto')),
-    assert(equipamento(alcool,'alcool gel lda')),
-    assert(equipamento(mascara,'joao reis')),
-    assert(equipamento(viseira,'cuf braga')),
-    assert(equipamento(cogula,'castelo clinic')),
-
-    assert(ligacao(aqualab,lusiadas,80,carrinha,'01:00','12:00')),
-    assert(ligacao(aqualab,'beja clinic',80,carrinha,'01:00','12:00')),
-    assert(ligacao('beja clinic','alcool corp',50,carro,'08:00','20:00')),
-    assert(ligacao('alcool corp','cuf evora',50,carro,'08:00','20:00')),
-    assert(ligacao('cuf evora','mascaras lda',30,carrinha,'01:00','12:00')),
-    assert(ligacao('mascaras lda','viseiras lda',60,carrinha,'01:00','12:00')),
-    assert(ligacao(lusiadas,'cuf caparica',100,carrinha,'01:00','12:00')),
-    assert(ligacao('cuf caparica','garcia da orta',40,carrinha,'01:00','12:00')),
-    assert(ligacao('garcia da orta','cuf evora',50,carrinha,'01:00','12:00')),
-    assert(ligacao('garcia da orta',luz,60,carro,'08:00','20:00')),
-    assert(ligacao('garcia da orta',alvalade,30,carro,'08:00','20:00')),
-    assert(ligacao(luz,alvalade,20,carro,'08:00','20:00')),
-    assert(ligacao(alvalade,'ventiladores lda',40,carrinha,'01:00','12:00')),
-    assert(ligacao('viseiras lda','ventiladores lda',50,comboio,'05:00','17:00')),
-    assert(ligacao('viseiras lda','luvas lda',120,comboio,'05:00','17:00')),
-    assert(ligacao('ventiladores lda','luis lourenco',20,carrinha,'01:00','12:00')),
-    assert(ligacao('ventiladores lda','protecao lda',220,comboio,'05:00','17:00')),
-    assert(ligacao('luis lourenco','centro hospitalar universitario',40,carrinha,'01:00','12:00')),
-    assert(ligacao('centro hospitalar universitario','santa maria',40,carrinha,'01:00','12:00')),
-    assert(ligacao('santa maria','cuf porto',25,carro,'08:00','20:00')),
-    assert(ligacao('protecao lda','cuf porto',80,carrinha,'01:00','12:00')),
-    assert(ligacao('luvas lda', 'protecao lda',120,comboio,'05:00','17:00')),
-    assert(ligacao('cuf porto','castelo clinic',70,carro,'08:00','20:00')),
-    assert(ligacao('protecao lda','joao reis',80,comboio,'05:00','17:00')),
-    assert(ligacao('joao reis','cuf braga',50,carro,'08:00','20:00')),
-    assert(ligacao('cuf braga','castelo clinic',40,carro,'08:00','20:00')),
-    assert(ligacao('luvas lda','alcool gel lda',150, helicopetro,'12:00','18:00')),
-    assert(ligacao('luvas lda','martins de sousa',50,comboio,'05:00','17:00')),
-    assert(ligacao('martins de sousa','alcool gel lda',50,comboio,'05:00','17:00')),
-    assert(ligacao('protecao lda','alcool gel lda',120,comboio,'05:00','17:00')),
-    write('Base de dados importada com sucesso.\n\n').
-
-eliminar_base_dados:-
-    retractall(membro(_,_,_)),
-    retractall(meio_transporte(_,_,_,_)),
-    retractall(equipamento(_,_)),
-    retractall(ligacao(_,_,_,_,_,_)),
-    write('Base de dados eliminada com sucesso.\n\n').
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
