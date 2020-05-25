@@ -1,0 +1,95 @@
+adicionar_membro:-
+    write('** Adicionar membro à rede. **'),nl,nl,
+    opcao_aux('Tipo: ', '[Tipo do membro (clinica, hospital, etc)]', Tipo),
+    opcao_aux('Nome: ', '[Nome do membro]', Nome),
+    opcao_aux('Localizacao: ', '[Inserir localidade ou cidade]', Localizacao),
+    verifica_membro(Tipo, Nome, Localizacao).
+
+adicionar_transporte:-
+    write('** Adicionar meio de transporte à rede. ***'), nl,nl,
+    opcao_aux('Descricao: ', [carro, carrinha, aviao, etc], Descricao),
+    opcao_aux('Velocidade (km/h): ', '[velocidade média do meio de transporte]', Velocidade),
+    opcao_aux('Hora (hh:mm): ', '[Hora inicial de funcionamento]', Hora_inicial),
+    opcao_aux('Hora final (hh:mm): ', '[Hora final de funcionamento]', Hora_final),
+    verifica_meio_transporte(Descricao, Velocidade, Hora_inicial, Hora_final).
+
+adicionar_equipamento:-
+    write('** Adicionar equipamentos de protecção existentes nos membros. **\n'),
+    opcao_aux('Descricao: ', [mascara, viseira, luvas, alcool, etc], Descricao),
+    opcao_aux('Membro: ', '[membro a que pertence]', Membro_pertencente),
+    verifica_equipamento(Descricao, Membro_pertencente).
+
+adicionar_ligacao:-
+    write('** Adicionar ligação entre membros. **\n\n'),
+    opcao_aux('Origem: ', '[Origem da ligação]', Origem),
+    opcao_aux('Destino: ', '[Destino da ligação]', Destino),
+    opcao_aux('Distância: ', '[Distância entre origem e destino] (km)', Distancia),
+    opcao_aux('Transporte: ', '[Meio de transporte para a viagem]', Transporte),
+    verifica_ligacao(Origem, Destino, Distancia, Transporte).
+
+alterar_meio_transporte:-
+    write('** Alterar meios de transporte **\n\n'),
+    opcao_aux('Transporte: ', '[Meio de transporte a alterar]', Transporte),
+    opcao_aux('Nome: ', '[Novo nome para o transporte a alterar]', Novo_nome),
+    opcao_aux('Velocidade: ', '[Nova velocidade]', Nova_velocidade),
+    opcao_aux('Hora inicial: ', '[Nova hora inicial de funcionamento]', Nova_hora_inicial),
+    opcao_aux('Hora final: ', '[Nova hora final de funcionamento]', Nova_hora_final),
+    verifica_alterar_transporte(Transporte, Novo_nome, Nova_velocidade, Nova_hora_inicial, Nova_hora_final).
+
+alterar_membro:-
+    write('** Alterar membro **\n\n'),
+    opcao_aux('Membro: ', '[Membro a alterar]', Nome),
+    opcao_aux('Tipo: ', '[Novo tipo para o membro]', Novo_tipo),
+    opcao_aux('Nome: ', '[Novo nome para o membro]', Novo_nome),
+    opcao_aux('Localização: ', '[Nova localização para o membro]', Nova_localizacao),
+    verifica_alterar_membro(Nome, Novo_tipo, Novo_nome, Nova_localizacao).
+
+alterar_equipamento:-
+    write('** Alterar equipamento de protecção existentes **\n\n'),
+    opcao_aux('Descricao: ', '[Nome do equipamento a alterar]', Descricao),
+    opcao_aux('Membro: ', '[Membro a que pertence o equipamento]', Membro_pertencente),
+    opcao_aux('Nome: ', '[Novo nome do equipamento]', Novo_nome),
+    opcao_aux('Membro: ', '[Novo membro do equipamento]', Novo_membro),
+    verifica_alterar_equipamento(Descricao, Membro_pertencente, Novo_nome, Novo_membro).
+
+alterar_ligacao:-
+    write('** Alterar ligações entre membros **\n\n'),
+    opcao_aux('Origem: ', '[Origem da ligação a alterar]', Origem),
+    opcao_aux('Destino: ', '[Destino da ligação a alterar]', Destino),
+    opcao_aux('Transporte: ', '[Transporte da ligação a alterar]', Transporte),
+    opcao_aux('Origem: ', '[Nova origem da ligação]', Nova_origem),
+    opcao_aux('Destino: ', '[Novo destino da ligação]',Novo_destino),
+    opcao_aux('Distância: ', '[Nova distação da ligação]', Nova_distancia),
+    opcao_aux('Meio de transporte: ', '[Novo meio de transporte da ligação]', Novo_transporte),
+    verifica_alterar_ligacao(Origem, Destino, Nova_origem, Novo_destino, Nova_distancia, Transporte, Novo_transporte).
+
+remover_membro:-
+    write('** Remover membro da rede de distribuição.\n\n'),
+    opcao_aux('Membro: ', '[Membro a remover da rede]', Membro_pretendido),
+    verifica_remover_membro(Membro_pretendido).
+
+remover_equipamento:-
+    write('** Remover equipamentos existentes nos membros. **\n\n'),
+    opcao_aux('Equipamento: ', '[Equipamento a eliminar]', Equipamento_pretendido),
+    opcao_aux('Membro: ', '[Membro a que se pretende eliminar o equipamento]', Membro_pretendido),
+    verifica_remover_equipamento(Equipamento_pretendido, Membro_pretendido).
+
+remover_ligacao:-
+    write('** Remover ligação entre membros da rede **\n\n'),
+    opcao_aux('Origem: ', '[Origem da ligação a eliminar]', Origem),
+    opcao_aux('Destino: ', '[Destino da ligação a eliminar]',Destino),
+    opcao_aux('Transporte: ', '[Transporte da ligação a eliminar]',Transporte),
+    verifica_remover_ligacao(Origem, Destino, Transporte).
+
+
+
+
+
+
+
+
+
+
+
+
+
