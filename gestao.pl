@@ -106,10 +106,9 @@ verifica_ligacao(Origem, Destino, Distancia, Transporte):-
     ligacao(Origem,Destino,_,Transporte,_,_,_),
     format('A ligação [~w]-[~w] com o transporte [~w] já existe.\n\n', [Origem, Destino, Transporte]),!;
     meio_transporte(Transporte,_,Hora_inicial,Hora_final),
-    equipamento(Equip,Origem),
     membro(_,Origem, _),
     membro(_,Destino, _),
-    assert(ligacao(Origem, Destino, Distancia, Transporte, Hora_inicial, Hora_final,Equip)),
+    assert(ligacao(Origem, Destino, Distancia, Transporte, Hora_inicial, Hora_final,_)),
     format('A ligação [~w]-[~w] com o transporte [~w] foi criada com sucesso.\n\n',[Origem,Destino, Transporte]),!;
     write('Para fazer ligações ambos os membros e o meio de transporte têm que existir na rede de distribuição.\n\n'),nl.
 
