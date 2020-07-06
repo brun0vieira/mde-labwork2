@@ -15,21 +15,21 @@ run:-
     run.
 
 menu(Opcao):-
-    write('1. Gest„o da base de conhecimento.'),nl,
-    write('2. Consultas ‡ base de conhecimento.'),nl,
+    write('1. Gest√£o da base de conhecimento.'),nl,
+    write('2. Consultas √† base de conhecimento.'),nl,
     write('3. Base de dados.'),nl,
-    write('4. Mais informaÁıes.'),nl,
+    write('4. Mais informa√ß√µes.'),nl,
     write('5. Sair.'),nl,
     ler_opcao(Opcao, 1, 5).
 
 ler_opcao(Opcao, A, B):-
-    nl, write('OpÁ„o: '),
+    nl, write('Op√ß√£o: '),
     ler_buffer(S),
     atom_number(S, Opcao),
     opcao_valida(Opcao, A, B),nl.
 
 ler_opcao(Opcao, A, B):-
-    nl, write('*** Opcao inv·lida. Tente outra vez: '),
+    nl, write('*** Opcao inv√°lida. Tente outra vez: '),
     ler_opcao(Opcao, A, B).
 
 opcao_valida(Opcao, A, B):-
@@ -45,19 +45,19 @@ menu_principal(5):- terminar_programa.
 
 menu_gestao:-
     limpar_ecra,
-    write('Gest„o da base de conhecimento'),nl,nl,
+    write('Gest√£o da base de conhecimento'),nl,nl,
     write('  1. Adicionar membros da rede.'),nl,
     write('  2. Adicionar meios de transporte.'),nl,
-    write('  3. Adicionar equipamentos de protecÁ„o existentes nos membros.'),nl,
-    write('  4. Adicionar ligaÁıes entre membros.'),nl,nl,
+    write('  3. Adicionar equipamentos de protec√ß√£o existentes nos membros.'),nl,
+    write('  4. Adicionar liga√ß√µes entre membros.'),nl,nl,
     write('  5. Alterar meios de transporte.'),nl,
     write('  6. Alterar membros da rede.'),nl,
-    write('  7. Alterar equipamentos de protecÁ„o existentes nos membros.'),nl,
-    write('  8. Alterar ligaÁıes entre membros.'),nl,
+    write('  7. Alterar equipamentos de protec√ß√£o existentes nos membros.'),nl,
+    write('  8. Alterar liga√ß√µes entre membros.'),nl,
     write('  9. Alterar ...'),nl,nl,
     write('10. Remover membros da rede.'),nl,
-    write('11. Remover equipamentos de protecÁ„o existentes nos membros.'),nl,
-    write('12. Remover ligaÁıes entre membros'),nl,
+    write('11. Remover equipamentos de protec√ß√£o existentes nos membros.'),nl,
+    write('12. Remover liga√ß√µes entre membros'),nl,
     write('13. Remover ...'),nl,nl,
     write('14. Voltar ao menu anterior.'),nl,
     ler_opcao(Opcao, 1, 14),
@@ -68,16 +68,16 @@ menu_gestao:-
 
 menu_consulta:-
     limpar_ecra,
-    write('Consultas ‡ base de conhecimento'),nl,nl,
+    write('Consultas √† base de conhecimento'),nl,nl,
     write('  1. Listar membros da rede.'),nl,
-    write('  2. Listar equipamentos de protecÁ„o existentes.'),nl,
+    write('  2. Listar equipamentos de protec√ß√£o existentes.'),nl,
     write('  3. Listar cidades por tipo de membro.'),nl,
-    write('  4. Listar transportes e hor·rios disponÌveis entre dois membros.'),nl,
-    write('  5. Listar itiner·rios entre membros.'),nl,nl,
-    write('  6. Obter itiner·rio entre membros com menor distancia'),nl,
-    write('  7. Obter itiner·rio entre membros com maior dist‚ncia.'),nl,
-    write('  8. Obter itiner·rio entre membros com passagem por outros membros.'),nl,
-    write('  9. Obter itiner·rio entre membros passando em membros com determinados equipamentos.'),nl,
+    write('  4. Listar transportes e hor√°rios dispon√≠veis entre dois membros.'),nl,
+    write('  5. Listar itiner√°rios entre membros.'),nl,nl,
+    write('  6. Obter itiner√°rio entre membros com menor distancia'),nl,
+    write('  7. Obter itiner√°rio entre membros com maior dist√¢ncia.'),nl,
+    write('  8. Obter itiner√°rio entre membros com passagem por outros membros.'),nl,
+    write('  9. Obter itiner√°rio entre membros passando em membros com determinados equipamentos.'),nl,
     write('10. Obter membros por cidade pretendida.'),nl,
     write('11. Obter a centralidade de um membro.'),nl,nl,
     write('12. Voltar ao menu anterior.'),nl,
@@ -89,7 +89,7 @@ menu_consulta:-
 
 base_dados:-
     limpar_ecra,
-    write('OperaÁıes sobre a base de dados'),nl,nl,
+    write('Opera√ß√µes sobre a base de dados'),nl,nl,
     write('  1. Importar base de dados'),nl,
     write('  2. Eliminar base de dados'),nl,nl,
     write('  3. Voltar ao menu anterior.'),nl,
@@ -99,7 +99,7 @@ base_dados:-
 
 info:-
     limpar_ecra,
-    write('Projecto n∫2 de MDE realizado por:'), nl,
+    write('Projecto n¬∫2 de MDE realizado por:'), nl,
     write('   Bruno Vieira - 50046.'), nl,
     write('   Serafim Ciobanu - 50006.'), nl, nl,
     voltar_menu_anterior.
@@ -116,7 +116,7 @@ process1(13,[]):-nl.
 process1(C,[C|R]) :- readlist1(R).
 
 %-----------------------------------------------------------
-% Gest„o da base de conhecimento
+% Gest√£o da base de conhecimento
 %-----------------------------------------------------------
 
 gestao(1):-
@@ -151,7 +151,7 @@ gestao(14):-
     run.
 
 %-----------------------------------------------------------
-% Consulta ‡ base de conhecimentos
+% Consulta √† base de conhecimentos
 %-----------------------------------------------------------
 
 consulta(1):-
